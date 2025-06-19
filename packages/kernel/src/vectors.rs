@@ -9,7 +9,7 @@
 //! file: <https://github.com/Xilinx/embeddedsw/blob/5688620af40994a0012ef5db3c873e1de3f20e9f/lib/bsp/standalone/src/arm/cortexa9/armcc/asm_vectors.s>
 
 use core::{
-    arch::{asm, global_asm},
+    arch::{asm, global_asm, naked_asm},
     ffi::c_void,
 };
 
@@ -66,10 +66,10 @@ pub unsafe fn set_vbar(addr: u32) {
 /// processor to each exception mode, load the respective stack section into sp,
 /// then branch to [`_start`].
 #[no_mangle]
-#[naked]
+#[unsafe(naked)]
 pub extern "C" fn reset() -> ! {
     unsafe {
-        asm!(
+        naked_asm!(
             "
             mrs r0, cpsr         @ Load CPSR
 
@@ -107,7 +107,6 @@ pub extern "C" fn reset() -> ! {
 
             b _start             @ Jump to Rust entrypoint
             ",
-            options(noreturn)
         )
     }
 }
@@ -121,10 +120,10 @@ pub extern "C" fn reset() -> ! {
 /// This exception occurs when the CPU's instruction pipelining encounters and
 /// attempts to execute an instrction it does not recognize.
 #[no_mangle]
-#[naked]
+#[unsafe(naked)]
 pub extern "C" fn undefined_instruction() -> ! {
     unsafe {
-        asm!(
+        naked_asm!(
             "
             stmdb sp!,{{r0-r3,r12,lr}}  @ state save from compiled code
             ldr r0, =UndefinedExceptionAddr
@@ -135,7 +134,6 @@ pub extern "C" fn undefined_instruction() -> ! {
 
             movs pc, lr
             ",
-            options(noreturn)
         )
     }
 }
@@ -146,10 +144,10 @@ pub extern "C" fn undefined_instruction() -> ! {
 /// (SWI/SVC). It currently just saves the program state/registers and calls
 /// `SWInterrupt` from libxil.
 #[no_mangle]
-#[naked]
+#[unsafe(naked)]
 pub extern "C" fn svc() -> ! {
     unsafe {
-        asm!(
+        naked_asm!(
             "
             stmdb sp!,{{r0-r3,r12,lr}} @ state save from compiled code
             tst	r0, #0x20              @ check the T bit
@@ -159,7 +157,6 @@ pub extern "C" fn svc() -> ! {
             ldmia sp!,{{r0-r3,r12,lr}} @ state restore from compiled code
             movs pc, lr                @ adjust return
             ",
-            options(noreturn)
         )
     }
 }
@@ -173,10 +170,10 @@ pub extern "C" fn svc() -> ! {
 ///
 /// See: <https://developer.arm.com/documentation/ddi0406/b/System-Level-Architecture/The-System-Level-Programmers--Model/Exceptions/Prefetch-Abort-exception>
 #[no_mangle]
-#[naked]
+#[unsafe(naked)]
 pub extern "C" fn prefetch_abort() -> ! {
     unsafe {
-        asm!(
+        naked_asm!(
             "
                 stmdb sp!,{{r0-r3,r12,lr}}  @ state save from compiled code
                 ldr r0, =PrefetchAbortAddr
@@ -186,7 +183,6 @@ pub extern "C" fn prefetch_abort() -> ! {
                 ldmia sp!,{{r0-r3,r12,lr}}  @ state restore from compiled code
                 subs pc, lr, #4           @ adjust return
             ",
-            options(noreturn)
         )
     }
 }
@@ -221,10 +217,10 @@ pub extern "C" fn data_abort() -> ! {
 /// This function is jumped to when the CPU receives an IRQ. It currently just
 /// saves the program state/registers and calls `IRQInterrupt` from libxil.
 #[no_mangle]
-#[naked]
+#[unsafe(naked)]
 pub extern "C" fn irq() -> ! {
     unsafe {
-        asm!(
+        naked_asm!(
             "
                 stmdb sp!,{{r0-r3,r12,lr}} @ state save from compiled code
                 vpush {{d0-d7}}
@@ -243,16 +239,15 @@ pub extern "C" fn irq() -> ! {
                 ldmia sp!,{{r0-r3,r12,lr}} @ state restore from compiled code
                 subs pc, lr, #4            @ adjust return
             ",
-            options(noreturn)
         )
     }
 }
 
 #[no_mangle]
-#[naked]
+#[unsafe(naked)]
 pub extern "C" fn fiq() -> ! {
     unsafe {
-        asm!(
+        naked_asm!(
             "
                 stmdb sp!,{{r0-r3,r12,lr}} @ state save from compiled code
                 vpush {{d0-d7}}
@@ -271,7 +266,6 @@ pub extern "C" fn fiq() -> ! {
                 ldmia sp!,{{r0-r3,r12,lr}} @ state restore from compiled code
                 subs pc, lr, #4            @ adjust return
             ",
-            options(noreturn)
         )
     }
 }

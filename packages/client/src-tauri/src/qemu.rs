@@ -2,10 +2,7 @@ use std::{borrow::BorrowMut, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
 use tauri::State;
-use tokio::{
-    process::Command,
-    sync::Mutex,
-};
+use tokio::{process::Command, sync::Mutex};
 
 use crate::AppState;
 

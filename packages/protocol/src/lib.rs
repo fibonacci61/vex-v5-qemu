@@ -3,12 +3,12 @@
 extern crate alloc;
 
 use alloc::vec::Vec;
+use core::{num::NonZeroU32, option::Option};
 
 use battery::BatteryData;
 use bincode::{Decode, Encode};
 use code_signature::CodeSignature;
 use controller::{ControllerData, ControllerId};
-use core::{option::Option, num::NonZeroU32};
 use display::{Color, DisplayRenderMode, DrawCommand, ScrollLocation};
 use distance_sensor::DistanceSensorData;
 use geometry::Rect;
@@ -103,16 +103,16 @@ macro_rules! impl_bincode_bitflags {
             }
         }
 
-        impl bincode::de::Decode for $flags {
-            fn decode<D: bincode::de::Decoder>(
+        impl<C> bincode::de::Decode<C> for $flags {
+            fn decode<D: bincode::de::Decoder<Context = C>>(
                 decoder: &mut D,
             ) -> Result<Self, bincode::error::DecodeError> {
                 Ok(Self::from_bits_retain(bincode::Decode::decode(decoder)?))
             }
         }
 
-        impl<'de> bincode::BorrowDecode<'de> for $flags {
-            fn borrow_decode<D: bincode::de::BorrowDecoder<'de>>(
+        impl<'de, C> bincode::BorrowDecode<'de, C> for $flags {
+            fn borrow_decode<D: bincode::de::BorrowDecoder<'de, Context = C>>(
                 decoder: &mut D,
             ) -> Result<Self, bincode::error::DecodeError> {
                 Ok(Self::from_bits_retain(
